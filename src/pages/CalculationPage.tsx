@@ -36,9 +36,8 @@ const MIN_AGE_BOXING = 5;
 const CalculationPage: React.FC = () => {
   const [form] = Form.useForm();
   const dispatch = useAppDispatch();
-  const { calculationResult, isLoading, error } = useAppSelector(
-    (state: RootState) => state.calculator,
-  );
+  const { calculationResult, isLoading, error, calculationData } =
+    useAppSelector((state: RootState) => state.calculator);
 
   const isOlderThan = (date: dayjs.Dayjs, years: number): boolean => {
     const minBirthDate = dayjs().subtract(years, "year");
@@ -79,9 +78,10 @@ const CalculationPage: React.FC = () => {
         console.log("Ошибка валидации");
       }
     };
-
+    console.log("asdadasdasd", dayjs(calculationData.birthDate));
     recalc();
-  }, [dispatch, form, values.birthDate, values.sportType]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [values?.birthDate, values?.sportType]);
 
   const disabledDate = (current: dayjs.Dayjs) =>
     current && current > dayjs().endOf("day");
@@ -90,7 +90,16 @@ const CalculationPage: React.FC = () => {
     <Card style={{ margin: "20px auto", width: 400 }}>
       <Title level={4}>Расчет стоимости страхования</Title>
 
-      <Form form={form} layout="vertical">
+      <Form
+        form={form}
+        layout="vertical"
+        initialValues={{
+          birthDate: calculationData.birthDate
+            ? dayjs(calculationData.birthDate)
+            : undefined,
+          sportType: calculationData.sportType || undefined,
+        }}
+      >
         <Form.Item
           label="Дата рождения"
           name="birthDate"
@@ -101,6 +110,11 @@ const CalculationPage: React.FC = () => {
         >
           <DatePicker
             style={{ width: "100%" }}
+            value={
+              calculationData.birthDate
+                ? dayjs(calculationData.birthDate)
+                : null
+            }
             format="DD.MM.YYYY"
             placeholder="Выберите дату"
             disabledDate={disabledDate}

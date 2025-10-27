@@ -7,13 +7,14 @@ import {
   type CalculatorState,
   type CalculationData,
   type CalculationResult,
+  type PersonalData,
 } from "@/shared/types/types";
 import { calculateInsurancePrice } from "@/shared/api/api";
 
 export const calculatePriceThunk = createAsyncThunk<
-  CalculationResult, // тип результата
-  CalculationData, // тип аргумента
-  { rejectValue: string } // тип ошибки
+  CalculationResult,
+  CalculationData,
+  { rejectValue: string }
 >("calculator/calculatePrice", async (data, { rejectWithValue }) => {
   try {
     const result = await calculateInsurancePrice(data);
@@ -33,6 +34,11 @@ const initialState: CalculatorState = {
   calculationResult: null,
   isLoading: false,
   error: null,
+  personalData: {
+    firstName: "",
+    lastName: "",
+    middleName: "",
+  },
 };
 
 export const calculatorSlice = createSlice({
@@ -45,8 +51,14 @@ export const calculatorSlice = createSlice({
     nextStep: (state) => {
       if (state.currentStep === 1) state.currentStep = 2;
     },
+    setPersonalData: (state, action: PayloadAction<PersonalData>) => {
+      state.personalData = action.payload;
+    },
     resetCalculator: (state) => {
-      Object.assign(state, initialState);
+      state.currentStep = 1;
+      state.calculationResult = null;
+      state.isLoading = false;
+      state.error = null;
     },
   },
   extraReducers: (builder) => {
@@ -67,7 +79,11 @@ export const calculatorSlice = createSlice({
   },
 });
 
-export const { setCalculationData, nextStep, resetCalculator } =
-  calculatorSlice.actions;
+export const {
+  setCalculationData,
+  nextStep,
+  resetCalculator,
+  setPersonalData,
+} = calculatorSlice.actions;
 
 export default calculatorSlice.reducer;
