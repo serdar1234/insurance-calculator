@@ -78,7 +78,6 @@ const CalculationPage: React.FC = () => {
         console.log("Ошибка валидации");
       }
     };
-    console.log("asdadasdasd", dayjs(calculationData.birthDate));
     recalc();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [values?.birthDate, values?.sportType]);
@@ -142,7 +141,7 @@ const CalculationPage: React.FC = () => {
         {!isLoading && calculationResult && (
           <div>
             <Text strong style={{ fontSize: "1.2em" }}>
-              Итоговая стоимость: {calculationResult.price}{" "}
+              Итоговая стоимость: {calculationResult.price}&nbsp;
               {calculationResult.currency}
             </Text>
             <p style={{ fontSize: "0.8em", color: "#888" }}>

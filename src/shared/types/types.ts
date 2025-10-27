@@ -22,4 +22,19 @@ export interface CalculatorState {
   isLoading: boolean;
   error: string | null;
   personalData: PersonalData;
+  isSubmitting: boolean;
+  submitError: string | null;
+  submitResult: PolicyCreationResult | null;
+}
+
+export interface PolicyCreationData {
+  calculationData: CalculationData;
+  personalData: PersonalData;
+  price: number;
+  currency: string;
+}
+
+export interface PolicyCreationResult {
+  policyId: string;
+  creationDate: string;
 }

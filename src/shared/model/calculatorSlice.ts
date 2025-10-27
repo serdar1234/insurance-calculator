@@ -7,9 +7,11 @@ import {
   type CalculatorState,
   type CalculationData,
   type CalculationResult,
+  type PolicyCreationResult,
   type PersonalData,
+  type PolicyCreationData,
 } from "@/shared/types/types";
-import { calculateInsurancePrice } from "@/shared/api/api";
+import { calculateInsurancePrice, createPolicy } from "@/shared/api/api";
 
 export const calculatePriceThunk = createAsyncThunk<
   CalculationResult,
@@ -21,6 +23,23 @@ export const calculatePriceThunk = createAsyncThunk<
     return result;
   } catch (err) {
     const message = err instanceof Error ? err.message : "Ошибка при расчете";
+    return rejectWithValue(message);
+  }
+});
+
+export const createPolicyThunk = createAsyncThunk<
+  PolicyCreationResult, // Результат в случае успеха
+  PolicyCreationData, // Данные, которые мы передаем
+  { rejectValue: string }
+>("calculator/createPolicy", async (data, { rejectWithValue }) => {
+  try {
+    const result = await createPolicy(data);
+    return result;
+  } catch (err) {
+    const message =
+      err instanceof Error
+        ? err.message
+        : "Неизвестная ошибка при создании полиса";
     return rejectWithValue(message);
   }
 });
@@ -39,6 +58,9 @@ const initialState: CalculatorState = {
     lastName: "",
     middleName: "",
   },
+  isSubmitting: false,
+  submitError: null,
+  submitResult: null,
 };
 
 export const calculatorSlice = createSlice({
@@ -59,6 +81,13 @@ export const calculatorSlice = createSlice({
       state.calculationResult = null;
       state.isLoading = false;
       state.error = null;
+      state.isSubmitting = false;
+      state.submitError = null;
+      state.submitResult = null;
+    },
+    clearSubmitResult: (state) => {
+      state.submitResult = null;
+      state.submitError = null;
     },
   },
   extraReducers: (builder) => {
@@ -75,6 +104,19 @@ export const calculatorSlice = createSlice({
       .addCase(calculatePriceThunk.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload ?? "Неизвестная ошибка";
+      })
+      .addCase(createPolicyThunk.pending, (state) => {
+        state.isSubmitting = true;
+        state.submitError = null;
+        state.submitResult = null;
+      })
+      .addCase(createPolicyThunk.fulfilled, (state, action) => {
+        state.isSubmitting = false;
+        state.submitResult = action.payload;
+      })
+      .addCase(createPolicyThunk.rejected, (state, action) => {
+        state.isSubmitting = false;
+        state.submitError = action.payload ?? "Неизвестная ошибка";
       });
   },
 });
@@ -83,6 +125,7 @@ export const {
   setCalculationData,
   nextStep,
   resetCalculator,
+  clearSubmitResult,
   setPersonalData,
 } = calculatorSlice.actions;
 

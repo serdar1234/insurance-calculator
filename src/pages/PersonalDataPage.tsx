@@ -5,49 +5,88 @@ import {
   Space,
   Form,
   Input,
+  Modal,
+  Result,
   Alert,
   notification,
 } from "antd";
+import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { useAppDispatch } from "@/app/store/hooks";
 import { type RootState } from "@/app/store/store";
 import {
   resetCalculator,
   setPersonalData,
+  createPolicyThunk,
+  clearSubmitResult,
 } from "@/shared/model/calculatorSlice";
-import { type PersonalData } from "@/shared/types/types";
+import {
+  type PersonalData,
+  type PolicyCreationData,
+} from "@/shared/types/types";
 import dayjs from "dayjs";
+import { getSportName } from "@/shared/lib/getSportName";
 
 const { Title, Text } = Typography;
 
 const PersonalDataPage: React.FC = () => {
   const dispatch = useAppDispatch();
-  const { calculationData, calculationResult, personalData } = useSelector(
-    (state: RootState) => state.calculator,
-  );
+  const {
+    calculationData,
+    calculationResult,
+    personalData,
+    isSubmitting,
+    submitResult,
+    submitError,
+  } = useSelector((state: RootState) => state.calculator);
 
   const [form] = Form.useForm<PersonalData>();
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (submitResult) {
+      setIsModalOpen(true);
+    }
+
+    if (submitError) {
+      notification.error({
+        message: "Ошибка оформления",
+        description: submitError,
+        duration: 5,
+      });
+    }
+  }, [submitResult, submitError]);
 
   const handleBack = () => {
+    dispatch(resetCalculator());
+  };
+
+  const handleModalClose = () => {
+    setIsModalOpen(false);
+    dispatch(clearSubmitResult());
     dispatch(resetCalculator());
   };
 
   const handleSubmit = (values: PersonalData) => {
     dispatch(setPersonalData(values));
 
-    const finalData = {
-      calculationData,
-      calculationResult,
+    if (!calculationResult) {
+      notification.error({
+        message: "Ошибка",
+        description:
+          "Невозможно оформить полис: отсутствует результат расчета стоимости.",
+      });
+      return;
+    }
+
+    const finalData: PolicyCreationData = {
+      calculationData: calculationData,
       personalData: values,
+      price: calculationResult.price,
+      currency: calculationResult.currency,
     };
 
-    console.log("--- ФИНАЛЬНЫЙ СУММАРНЫЙ ОБЪЕКТ ДАННЫХ ДЛЯ API ---");
-    console.log(finalData);
-    notification.success({
-      message: "Оформление завершено (мок)",
-      description: `Данные для полиса на имя ${values.lastName} ${values.firstName} сохранены.`,
-      duration: 4,
-    });
+    dispatch(createPolicyThunk(finalData));
   };
 
   const initialValues: PersonalData = personalData;
@@ -61,7 +100,7 @@ const PersonalDataPage: React.FC = () => {
           type="success"
           message={
             <Text strong>
-              Итоговая стоимость: {calculationResult.price}{" "}
+              Итоговая стоимость: {calculationResult.price}&nbsp;
               {calculationResult.currency}
             </Text>
           }
@@ -102,7 +141,7 @@ const PersonalDataPage: React.FC = () => {
 
         <Space direction="vertical" style={{ width: "100%", marginBottom: 20 }}>
           <Text>
-            Дата рождения:{" "}
+            Дата рождения:&nbsp;
             <strong>
               {calculationData.birthDate
                 ? dayjs(calculationData.birthDate).format("DD.MM.YYYY")
@@ -110,18 +149,52 @@ const PersonalDataPage: React.FC = () => {
             </strong>
           </Text>
           <Text>
-            Вид спорта:{" "}
-            <strong>{calculationData.sportType || "Не выбран"}</strong>
+            Вид спорта:&nbsp;
+            <strong>
+              {getSportName(calculationData.sportType) || "Не выбран"}
+            </strong>
           </Text>
         </Space>
 
         <Space>
-          <Button onClick={handleBack}>Вернуться к расчёту</Button>
-          <Button type="primary" htmlType="submit">
-            Отправить (мок)
+          <Button onClick={handleBack} disabled={isSubmitting}>
+            Вернуться к расчёту
+          </Button>
+          <Button
+            type="primary"
+            htmlType="submit"
+            loading={isSubmitting}
+            disabled={isSubmitting || !calculationResult}
+          >
+            Создать полис
           </Button>
         </Space>
       </Form>
+
+      <Modal
+        title="Оформление завершено"
+        open={isModalOpen}
+        onCancel={handleModalClose}
+        footer={[
+          <Button key="ok" type="primary" onClick={handleModalClose}>
+            Начать новый расчет
+          </Button>,
+        ]}
+      >
+        {submitResult && (
+          <Result
+            status="success"
+            title="Полис успешно создан!"
+            subTitle={`Ваш полис № ${submitResult.policyId} оформлен.`}
+            extra={
+              <Text type="secondary">
+                Дата оформления:&nbsp;
+                {dayjs(submitResult.creationDate).format("DD.MM.YYYY HH:mm")}
+              </Text>
+            }
+          />
+        )}
+      </Modal>
     </Card>
   );
 };

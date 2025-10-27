@@ -1,17 +1,34 @@
 import {
   type CalculationData,
   type CalculationResult,
+  type PolicyCreationData,
+  type PolicyCreationResult,
 } from "@/shared/types/types";
-import { SPORT_OPTIONS } from "../consts/sports";
-
-const SPORT_NAMES: Record<string, string> = Object.fromEntries(
-  (SPORT_OPTIONS ?? []).map((opt) => [
-    opt?.value as string,
-    opt?.label as string,
-  ]),
-);
+import { getSportName } from "../lib/getSportName";
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+export const createPolicy = async (
+  data: PolicyCreationData,
+): Promise<PolicyCreationResult> => {
+  console.log(`[MOCK API] POST запрос на ${data} с финальными данными:`, data);
+
+  await delay(1500);
+  if (Math.random() < 0.1) {
+    throw new Error(
+      "API Error: Не удалось создать полис из-за проблем с базой данных.",
+    );
+  }
+
+  const result: PolicyCreationResult = {
+    policyId: `POL-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+    creationDate: new Date().toISOString(),
+  };
+
+  console.log(`[MOCK API] Полиc успешно создан. ID: ${result.policyId}`);
+
+  return result;
+};
 
 export const calculateInsurancePrice = async (
   data: CalculationData,
@@ -38,7 +55,7 @@ export const calculateInsurancePrice = async (
     basePrice *= 1.3;
   }
 
-  const sportName = SPORT_NAMES[data.sportType] ?? data.sportType;
+  const sportName = getSportName(data.sportType);
   const result: CalculationResult = {
     price: Math.round(basePrice / 100) * 100,
     currency: "RUB",
