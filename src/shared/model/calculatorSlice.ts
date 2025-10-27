@@ -1,67 +1,7 @@
-import {
-  createSlice,
-  createAsyncThunk,
-  type PayloadAction,
-} from "@reduxjs/toolkit";
-import {
-  type CalculatorState,
-  type CalculationData,
-  type CalculationResult,
-  type PolicyCreationResult,
-  type PersonalData,
-  type PolicyCreationData,
-} from "@/shared/types/types";
-import { calculateInsurancePrice, createPolicy } from "@/shared/api/api";
-
-export const calculatePriceThunk = createAsyncThunk<
-  CalculationResult,
-  CalculationData,
-  { rejectValue: string }
->("calculator/calculatePrice", async (data, { rejectWithValue }) => {
-  try {
-    const result = await calculateInsurancePrice(data);
-    return result;
-  } catch (err) {
-    const message = err instanceof Error ? err.message : "Ошибка при расчете";
-    return rejectWithValue(message);
-  }
-});
-
-export const createPolicyThunk = createAsyncThunk<
-  PolicyCreationResult, // Результат в случае успеха
-  PolicyCreationData, // Данные, которые мы передаем
-  { rejectValue: string }
->("calculator/createPolicy", async (data, { rejectWithValue }) => {
-  try {
-    const result = await createPolicy(data);
-    return result;
-  } catch (err) {
-    const message =
-      err instanceof Error
-        ? err.message
-        : "Неизвестная ошибка при создании полиса";
-    return rejectWithValue(message);
-  }
-});
-
-const initialState: CalculatorState = {
-  calculationData: {
-    birthDate: "",
-    sportType: "",
-  },
-  currentStep: 1,
-  calculationResult: null,
-  isLoading: false,
-  error: null,
-  personalData: {
-    firstName: "",
-    lastName: "",
-    middleName: "",
-  },
-  isSubmitting: false,
-  submitError: null,
-  submitResult: null,
-};
+import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
+import { type CalculationData, type PersonalData } from "@/shared/types/types";
+import { calculatePriceThunk, createPolicyThunk } from "./calculatorThunks";
+import { initialState } from "./calculatorInitialState";
 
 export const calculatorSlice = createSlice({
   name: "calculator",
@@ -73,17 +13,14 @@ export const calculatorSlice = createSlice({
     nextStep: (state) => {
       if (state.currentStep === 1) state.currentStep = 2;
     },
+    prevStep: (state) => {
+      if (state.currentStep === 2) state.currentStep = 1;
+    },
     setPersonalData: (state, action: PayloadAction<PersonalData>) => {
       state.personalData = action.payload;
     },
-    resetCalculator: (state) => {
-      state.currentStep = 1;
-      state.calculationResult = null;
-      state.isLoading = false;
-      state.error = null;
-      state.isSubmitting = false;
-      state.submitError = null;
-      state.submitResult = null;
+    resetCalculator: () => {
+      return initialState;
     },
     clearSubmitResult: (state) => {
       state.submitResult = null;
@@ -124,6 +61,7 @@ export const calculatorSlice = createSlice({
 export const {
   setCalculationData,
   nextStep,
+  prevStep,
   resetCalculator,
   clearSubmitResult,
   setPersonalData,

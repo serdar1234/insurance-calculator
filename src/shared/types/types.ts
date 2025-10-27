@@ -37,4 +37,5 @@ export interface PolicyCreationData {
 export interface PolicyCreationResult {
   policyId: string;
   creationDate: string;
+  finalPrice: number;
 }

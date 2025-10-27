@@ -6,26 +6,45 @@ import {
 } from "@/shared/types/types";
 import { getSportName } from "../lib/getSportName";
 
+const ONLINE_MOCK_API_URL =
+  "https://53bf16ff349741a587027a9024cc48df.api.mockbin.io/";
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export const createPolicy = async (
   data: PolicyCreationData,
 ): Promise<PolicyCreationResult> => {
-  console.log(`[MOCK API] POST запрос на ${data} с финальными данными:`, data);
+  console.log(
+    `[Mockbin API] POST запрос на ${ONLINE_MOCK_API_URL} с данными:`,
+    data,
+  );
 
-  await delay(1500);
-  if (Math.random() < 0.1) {
-    throw new Error(
-      "API Error: Не удалось создать полис из-за проблем с базой данных.",
-    );
+  const response = await fetch(ONLINE_MOCK_API_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  });
+
+  if (!response.ok) {
+    const errorBody = await response.json().catch(() => ({}));
+    const errorMessage =
+      errorBody.message ||
+      `Ошибка HTTP при создании полиса: ${response.status}`;
+    throw new Error(errorMessage);
   }
 
+  const mockbinResult: { price: number } = await response.json();
+
   const result: PolicyCreationResult = {
-    policyId: `POL-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+    policyId: `MOCK-${Date.now()}`,
     creationDate: new Date().toISOString(),
+    finalPrice: mockbinResult.price,
   };
 
-  console.log(`[MOCK API] Полиc успешно создан. ID: ${result.policyId}`);
+  console.log(
+    `[Mockbin API] Полиc создан. Финальная цена: ${result.finalPrice} RUB`,
+  );
 
   return result;
 };
@@ -37,7 +56,7 @@ export const calculateInsurancePrice = async (
 
   await delay(1000);
 
-  let basePrice = 10000;
+  let basePrice = 2000;
 
   if (data.sportType === "box" || data.sportType === "climbing") {
     basePrice *= 2.5;

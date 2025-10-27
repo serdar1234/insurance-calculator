@@ -17,7 +17,7 @@ import { type RootState } from "@/app/store/store";
 import {
   resetCalculator,
   setPersonalData,
-  createPolicyThunk,
+  prevStep,
   clearSubmitResult,
 } from "@/shared/model/calculatorSlice";
 import {
@@ -26,6 +26,7 @@ import {
 } from "@/shared/types/types";
 import dayjs from "dayjs";
 import { getSportName } from "@/shared/lib/getSportName";
+import { createPolicyThunk } from "@/shared/model/calculatorThunks";
 
 const { Title, Text } = Typography;
 
@@ -57,8 +58,18 @@ const PersonalDataPage: React.FC = () => {
     }
   }, [submitResult, submitError]);
 
-  const handleBack = () => {
-    dispatch(resetCalculator());
+  const handleBack = async () => {
+    try {
+      const currentValues = form.getFieldsValue();
+      dispatch(setPersonalData(currentValues));
+      dispatch(prevStep());
+    } catch (error) {
+      console.error(
+        "Ошибка при сохранении личных данных перед возвратом:",
+        error,
+      );
+      dispatch(prevStep());
+    }
   };
 
   const handleModalClose = () => {
@@ -100,7 +111,7 @@ const PersonalDataPage: React.FC = () => {
           type="success"
           message={
             <Text strong>
-              Итоговая стоимость: {calculationResult.price}&nbsp;
+              Предварительная стоимость: {calculationResult.price}&nbsp;
               {calculationResult.currency}
             </Text>
           }
@@ -187,10 +198,18 @@ const PersonalDataPage: React.FC = () => {
             title="Полис успешно создан!"
             subTitle={`Ваш полис № ${submitResult.policyId} оформлен.`}
             extra={
-              <Text type="secondary">
-                Дата оформления:&nbsp;
-                {dayjs(submitResult.creationDate).format("DD.MM.YYYY HH:mm")}
-              </Text>
+              <Space
+                direction="vertical"
+                style={{ width: "100%", textAlign: "center" }}
+              >
+                <Text strong style={{ fontSize: "1.2em", color: "#52c41a" }}>
+                  Финальная стоимость: {submitResult.finalPrice} RUB
+                </Text>
+                <Text type="secondary">
+                  Дата оформления:&nbsp;
+                  {dayjs(submitResult.creationDate).format("DD.MM.YYYY HH:mm")}
+                </Text>
+              </Space>
             }
           />
         )}

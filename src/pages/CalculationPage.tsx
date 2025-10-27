@@ -16,14 +16,11 @@ import customParseFormat from "dayjs/plugin/customParseFormat";
 import isBetween from "dayjs/plugin/isBetween";
 import type { RuleObject } from "antd/es/form";
 
-import {
-  calculatePriceThunk,
-  setCalculationData,
-  nextStep,
-} from "@/shared/model/calculatorSlice";
+import { setCalculationData, nextStep } from "@/shared/model/calculatorSlice";
 import { type RootState } from "@/app/store/store";
 import { SPORT_OPTIONS } from "@/shared/consts/sports";
 import { type CalculationData } from "@/shared/types/types";
+import { calculatePriceThunk } from "@/shared/model/calculatorThunks";
 
 dayjs.extend(customParseFormat);
 dayjs.extend(isBetween);
@@ -86,7 +83,7 @@ const CalculationPage: React.FC = () => {
     current && current > dayjs().endOf("day");
 
   return (
-    <Card style={{ margin: "20px auto", width: 400 }}>
+    <Card style={{ margin: "20px auto", minWidth: 360 }}>
       <Title level={4}>Расчет стоимости страхования</Title>
 
       <Form
@@ -141,7 +138,7 @@ const CalculationPage: React.FC = () => {
         {!isLoading && calculationResult && (
           <div>
             <Text strong style={{ fontSize: "1.2em" }}>
-              Итоговая стоимость: {calculationResult.price}&nbsp;
+              Предварительная стоимость: {calculationResult.price}&nbsp;
               {calculationResult.currency}
             </Text>
             <p style={{ fontSize: "0.8em", color: "#888" }}>
