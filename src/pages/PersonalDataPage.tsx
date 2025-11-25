@@ -11,8 +11,7 @@ import {
   notification,
 } from "antd";
 import { useEffect, useState } from "react";
-import { useSelector } from "react-redux";
-import { useAppDispatch } from "@/app/store/hooks";
+import { useAppDispatch, useAppSelector } from "@/app/store/hooks";
 import { type RootState } from "@/app/store/store";
 import {
   resetCalculator,
@@ -39,7 +38,7 @@ const PersonalDataPage: React.FC = () => {
     isSubmitting,
     submitResult,
     submitError,
-  } = useSelector((state: RootState) => state.calculator);
+  } = useAppSelector((state: RootState) => state.calculator);
 
   const [form] = Form.useForm<PersonalData>();
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
@@ -103,7 +102,7 @@ const PersonalDataPage: React.FC = () => {
   const initialValues: PersonalData = personalData;
 
   return (
-    <Card style={{ margin: "20px auto", maxWidth: 400 }}>
+    <Card style={{ margin: "20px auto", minWidth: 360 }}>
       <Title level={4}>Шаг 2: Личные данные</Title>
 
       {calculationResult && (
@@ -167,7 +166,7 @@ const PersonalDataPage: React.FC = () => {
           </Text>
         </Space>
 
-        <Space>
+        <Space style={{ display: "flex", justifyContent: "end" }}>
           <Button onClick={handleBack} disabled={isSubmitting}>
             Вернуться к расчёту
           </Button>

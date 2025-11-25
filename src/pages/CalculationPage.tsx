@@ -41,7 +41,10 @@ const CalculationPage: React.FC = () => {
     return date.isBefore(minBirthDate) || date.isSame(minBirthDate, "day");
   };
 
-  const validateBirthDate = (_: RuleObject, value: dayjs.Dayjs) => {
+  const validateBirthDate = (
+    _: RuleObject,
+    value: dayjs.Dayjs,
+  ): Promise<void> => {
     if (!value) return Promise.reject("Выберите дату рождения");
 
     const sportType = form.getFieldValue("sportType");
@@ -76,8 +79,7 @@ const CalculationPage: React.FC = () => {
       }
     };
     recalc();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [values?.birthDate, values?.sportType]);
+  }, [values?.birthDate, values?.sportType, dispatch, form]);
 
   const disabledDate = (current: dayjs.Dayjs) =>
     current && current > dayjs().endOf("day");
